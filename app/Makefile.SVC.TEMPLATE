@@ -1,0 +1,109 @@
+C_Y=\033[1;33m
+C_C=\033[0;36m
+C_M=\033[0;35m
+C_N=\033[0m
+
+GIT_REV=$(TRAVIS_COMMIT)
+ifeq ($(strip $(GIT_REV)),)
+#ifndef GIT_REV
+		GIT_REV := $(shell git rev-parse --short HEAD)
+endif
+
+GIT_BRANCH=$(TRAVIS_BRANCH)
+ifeq ($(strip $(GIT_BRANCH)),)
+#ifndef GIT_BRANCH
+        GIT_BRANCH := $(shell git branch | grep \* | cut -d ' ' -f2)
+endif
+
+BUILD_NUMBER=$(TRAVIS_BUILD_NUMBER)
+ifeq ($(strip $(BUILD_NUMBER)),)
+#ifndef BUILD_NUMBER
+		BUILD_NUMBER := "none"
+endif
+
+PROJECT_NAME=hackfest
+APP_NAME=$(shell basename $(PWD))
+PORT=$(shell grep EXPOSE Dockerfile  | cut -d" " -f2)
+GCP_PROJECT=mimetic-card-241611
+REPOSITORY=gcr.io/$(GCP_PROJECT)
+DOCKER_TAGGED_BUILD=$(REPOSITORY)/$(PROJECT_NAME)/$(APP_NAME)/$(GIT_BRANCH):latest
+
+# HELP
+# This will output the help for each task
+# thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+.PHONY: help clean
+
+help: ## This help.
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+.DEFAULT_GOAL := help
+
+
+# DOCKER TASKS
+# Build the container
+build: ## Build the container
+	@echo "branch="$(GIT_BRANCH) " revision="$(GIT_REV) " build="$(BUILD_NUMBER) > version.txt
+	docker build -t $(APP_NAME) .
+
+build-nc: ## Build the container without caching
+	docker build --no-cache -t $(APP_NAME) .
+
+run: ## Run container on port configured in `config.env`
+	docker run -i -t --rm  -p=$(PORT):$(PORT) --name="$(APP_NAME)" $(APP_NAME)
+
+up: build run ## same as run
+
+stop: ## Stop and remove a running container
+	docker stop $(APP_NAME); docker rm $(APP_NAME)
+
+clean: ## Remove docker images built locally (incl full name)
+	@IMGS=$(shell docker images $(APP_NAME) -q) ; \
+		if [ -z $$IMGS ]; \
+		then echo " No $(C_M)$(APP_NAME)$(C_N) images to delete"; \
+		else docker rmi -f $$IMGS ; \
+		fi;
+
+release: build-nc publish ## Make a release by building and publishing the `latest` tagged containers to GCR
+
+# Docker publish
+publish: publish-latest ## same as publish-latest
+
+publish-latest: tag-latest ## Publish the `latest` tagged container to GCR
+	@echo "publish rev $(C_Y)$(GIT_BRANCH)-$(GIT_REV)$(C_N) as latest to $(C_C)$(DOCKER_TAGGED_BUILD)$(C_N)"
+	docker push $(DOCKER_TAGGED_BUILD)
+
+# Docker tagging
+tag: tag-latest ## same as tag-latest
+
+tag-latest: ## Generate container `latest` tag
+	@echo 'create tag latest for rev $(GIT_BRANCH)-$(GIT_REV)'
+	docker tag $(APP_NAME) $(DOCKER_TAGGED_BUILD)
+
+whoami: ## Show service name, port, current Git branch and revision
+	@echo "$(C_Y)$(APP_NAME)$(C_N) exposed on $(C_M)port $(PORT)$(C_N) at revision $(C_C)$(GIT_BRANCH)-$(GIT_REV)$(C_N)"
+
+# Kubernetes actions - under following assumptions:
+# 1. kubectl properly configured (credentials, cluster, namespace)
+# 2. initial setup (like namespaces, role creation, etc) is already taken care of
+# 3. TBD
+
+deploy:  ## Deploy service to Kubernetes cluster
+	@kubectl apply -f deploy.yaml
+
+reload:  ## Restart deployment in Kubernetes cluster (gracefully) 
+	@kubectl rollout restart deployment/$(APP_NAME)
+
+reload-pod:  ## Restart pod in Kubernetes cluster (FORCE!)
+	@PODS=$(shell kubectl get pods -o name | grep $(APP_NAME)) ; \
+		if [ -z $$PODS ]; \
+		then echo " No pods for $(C_M)$(APP_NAME)$(C_N) found"; \
+		else kubectl delete --force --grace-period=0 $$PODS ; \
+		fi;
+	@echo "--- PODS --------"
+	@kubectl get pods -o wide
+
+show-image: ## Show latest images in GCR
+	@gcloud container images list-tags $(REPOSITORY)/$(PROJECT_NAME)/$(APP_NAME)/$(GIT_BRANCH) --limit=3
+
+debug:
+	echo $(GIT_BRANCH)

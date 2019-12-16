@@ -35,11 +35,18 @@ const LatestQuake = mongoose.model('LatestQuake');
 const Weather = mongoose.model('Weather');
 const LatestWeather = mongoose.model('LatestWeather');
 
-var mongoPrefix = "mongodb://"
+var mongoPrefix = "mongodb+srv://"
 var user = process.env.MONGODB_USER
 var password = process.env.MONGODB_PASSWORD
+var mongo_host = process.env.MONGODB_HOST
 
-var cosmosConnectString = mongoPrefix.concat(user,`:`,password,`@`,user,`.documents.azure.com:10255/hackfest?ssl=true`)
+var cosmosConnectString = mongoPrefix.concat(user,`:`,password,`@`,mongo_host,`/hackfest`)
+
+//var mongoPrefix = "mongodb://"
+//var user = process.env.MONGODB_USER
+//var password = process.env.MONGODB_PASSWORD
+//
+//var cosmosConnectString = mongoPrefix.concat(user,`:`,password,`@`,user,`.documents.azure.com:10255/hackfest?ssl=true`)
 
 mongoose.connect(
     cosmosConnectString,

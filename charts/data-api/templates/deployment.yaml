@@ -38,7 +38,9 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: cosmos-db-secret
-                  key: appinsights                   
+                  key: appinsights
+            - name: MONGODB_HOST
+              value: {{.Values.deploy.mongoHost}}
           ports:
           - containerPort: {{.Values.deploy.containerPort}}
             protocol: TCP
