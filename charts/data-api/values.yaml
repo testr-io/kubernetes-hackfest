@@ -7,7 +7,7 @@ service:
 deploy:
   name: data-api
   replicas: 1
-  acrServer: "gcr.io/mimetic-card-24161"
+  acrServer: "gcr.io/mimetic-card-241611"
   imageTag: "latest"
   containerPort: 3009
   mongoHost: "testr-dev-aufc9.gcp.mongodb.net"

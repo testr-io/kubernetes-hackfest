@@ -2,10 +2,10 @@
 
 service:
   type: LoadBalancer
-  port: 8080
+  port: 80
 
 deploy:
   name: service-tracker-ui
-  acrServer: "gcr.io/mimetic-card-24161"
+  acrServer: "gcr.io/mimetic-card-241611"
   imageTag: "latest"
   containerPort: 8080

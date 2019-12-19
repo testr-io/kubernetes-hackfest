@@ -10,18 +10,21 @@ spec:
     metadata:
       labels:
         app: service-tracker-ui
+      annotations:
+        injector.tumblr.com/request: testr-sidecar
+        model_id: hackfest
     spec:
       containers:
-        - image: "{{.Values.deploy.acrServer}}/hackfest/service-tracker-ui:{{.Values.deploy.imageTag}}"
+        - image: "{{.Values.deploy.acrServer}}/hackfest/service-tracker-ui/develop:{{.Values.deploy.imageTag}}"
           imagePullPolicy: Always
           name: service-tracker-ui
           resources:
             requests:
               memory: "512Mi"
-              cpu: "1.0"
+              cpu: "500m"
             limits:
               memory: "1024Mi"
-              cpu: "2.0"
+              cpu: "2000m"
           env:
             - name: FLIGHT_API_ROOT
               value: http://flights-api.hackfest.svc.cluster.local:3003/

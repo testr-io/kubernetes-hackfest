@@ -11,9 +11,12 @@ spec:
     metadata:
       labels:
         app: quakes-api
+      annotations:
+        injector.tumblr.com/request: testr-sidecar
+        model_id: hackfest
     spec:
       containers:
-        - image: "{{.Values.deploy.acrServer}}/hackfest/quakes-api:{{.Values.deploy.imageTag}}"
+        - image: "{{.Values.deploy.acrServer}}/hackfest/quakes-api/develop:{{.Values.deploy.imageTag}}"
           imagePullPolicy: Always
           name: quakes-api
           resources:

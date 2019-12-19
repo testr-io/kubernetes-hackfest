@@ -7,6 +7,6 @@ service:
 deploy:
   name: weather-api
   replicas: 1
-  acrServer: "gcr.io/mimetic-card-24161"
+  acrServer: "gcr.io/mimetic-card-241611"
   imageTag: "latest"
   containerPort: 3015
