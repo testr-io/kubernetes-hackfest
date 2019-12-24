@@ -11,7 +11,7 @@ spec:
       labels:
         app: service-tracker-ui
       annotations:
-        injector.tumblr.com/request: testr-sidecar
+        injector.tumblr.com/request: testr-sidecar-passive
         model_id: hackfest
     spec:
       containers:

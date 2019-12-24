@@ -12,7 +12,7 @@ spec:
       labels:
         app: quakes-api
       annotations:
-        injector.tumblr.com/request: testr-sidecar
+        injector.tumblr.com/request: testr-sidecar-passive
         model_id: hackfest
     spec:
       containers:
